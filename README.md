@@ -53,7 +53,9 @@ The `--follow` flag allows you to see the build logs in real-time.
 Once the build has completed successfully, the image will be available in OpenShift's internal `ImageStream`. You can now deploy `KafkaMirrorMaker2`.
 
 ```sh
-oc apply -f mm2-custom-resource.yaml
+oc apply -f kafka-cluster-a.yaml
+oc apply -f kafka-cluster-b.yaml
+oc apply -f kafkamirrormaker2-my-mm2-cluster.yaml
 ```
 
 ### 5. Verify
@@ -61,8 +63,7 @@ oc apply -f mm2-custom-resource.yaml
 Check the logs of the MM2 pod to see the confirmation message that your SMT was loaded.
 
 ```sh
-# Find the name of the MM2 pod
-MM2_POD=$(oc get pods -l strimzi.io/cluster=my-custom-mm2 -o jsonpath='{.items[0].metadata.name}')
 
 # Check the logs
-oc logs $MM2_POD | grep "Custom Logging SMT has been successfully loaded"
+oc logs my-mm2-cluster-mirrormaker2-0 | grep "Custom Logging SMT"
+```
