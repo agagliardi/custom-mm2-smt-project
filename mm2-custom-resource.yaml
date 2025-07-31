@@ -1,0 +1,37 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaMirrorMaker2
+metadata:
+  name: my-custom-mm2
+spec:
+  version: 3.7.0 # Should match the Kafka version in your image
+  replicas: 1
+  
+  # Define the connection to the target cluster where MM2 will run
+  connectCluster: "my-target-cluster" 
+  
+  # Define the source and target Kafka cluster aliases
+  clusters:
+  - alias: "my-source-cluster"
+    bootstrapServers: my-source-cluster-kafka-bootstrap:9092
+  - alias: "my-target-cluster"
+    bootstrapServers: my-target-cluster-kafka-bootstrap:9092
+  
+  # --- Custom Image Configuration ---
+  # Point to the custom image you built and pushed to the OpenShift registry.
+  # The path format is: <registry-host>/<project-name>/<image-name>:<tag>
+  # !!! MODIFICA QUESTO VALORE !!!
+  image: image-registry.openshift-image-registry.svc:5000/your-project-name/custom-mirrormaker2:latest
+  
+  # Define the mirroring pipeline
+  mirrors:
+  - sourceCluster: "my-source-cluster"
+    targetCluster: "my-target-cluster"
+    sourceConnector:
+      config:
+        # --- SMT Configuration ---
+        # 1. Give a name to your transform chain.
+        transforms: "LogOnLoad"
+        # 2. Specify the class of your SMT.
+        transforms.LogOnLoad.type: "com.example.smt.LoggingSmT"
+        # Use the default replication policy
+        replication.policy.class: "org.apache.kafka.connect.mirror.IdentityReplicationPolicy"
