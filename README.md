@@ -1,64 +1,68 @@
-# Progetto SMT Custom per Kafka MirrorMaker 2
+# Custom SMT Project for Kafka MirrorMaker 2
 
-Questo progetto contiene tutto il necessario per costruire e deployare un Single Message Transform (SMT) custom per Strimzi MirrorMaker 2 su OpenShift, eseguendo la build direttamente all'interno del cluster.
+This project contains everything needed to build and deploy a custom Single Message Transform (SMT) for Strimzi MirrorMaker 2 on OpenShift, by running the build process directly inside the cluster.
 
-## Struttura del Progetto
+## Project Structure
 
-* `src/main/java/com/example/smt/LoggingSmT.java`: Il codice sorgente del nostro SMT.
-* `pom.xml`: Il file di configurazione di Maven per compilare il progetto.
-* `Dockerfile`: Le istruzioni per costruire l'immagine container custom di MM2.
-* `buildconfig.yaml`: La configurazione per dire a OpenShift come costruire l'immagine usando i file locali.
-* `mm2-custom-resource.yaml`: La Custom Resource (CR) di `KafkaMirrorMaker2` per il deploy su OpenShift.
+* `src/main/java/com/example/smt/LoggingSmT.java`: The source code for our SMT.
+* `pom.xml`: The Maven configuration file to compile the project.
+* `Dockerfile`: The instructions to build the custom MM2 container image.
+* `buildconfig.yaml`: The configuration to tell OpenShift how to build the image using local files.
+* `mm2-custom-resource.yaml`: The `KafkaMirrorMaker2` Custom Resource (CR) for deploying on OpenShift.
 
-## Come Usare
+## How to Use
 
-Il processo si basa su una **build binaria**, che invia i file dal tuo computer locale direttamente a OpenShift per la creazione dell'immagine.
+The process is based on a **binary build**, which sends files from your local machine directly to OpenShift to create the image.
 
-### 1. Compilare il JAR localmente
+### 1. Compile the JAR locally
 
-Assicurati di avere Maven e JDK 11 (o superiore) installati. Dalla cartella principale del progetto, esegui:
+Make sure you have Maven and JDK 11 (or higher) installed. From the project's root folder, run:
 
 ```sh
 mvn clean package
 ```
 
-Questo comando creerà il file `target/custom-smt-1.0.0.jar`, che verrà incluso nella build.
+This command will create the `target/custom-smt-1.0.0.jar` file, which will be included in the build.
 
-### 2. Creare la `BuildConfig` su OpenShift
+### 2. Create the ImageStream and BuildConfig on OpenShift
 
-Applica il file `buildconfig.yaml` al tuo progetto OpenShift. Questo va fatto solo una volta.
+Before starting the build, we need to ensure OpenShift knows where to save the image. We will explicitly create an `ImageStream` and then the `BuildConfig`. This only needs to be done once.
 
 ```sh
+# 1. Create the ImageStream (the destination for our image)
+oc create imagestream custom-mirrormaker2
+
+# 2. Create the BuildConfig
 oc apply -f buildconfig.yaml
 ```
 
-### 3. Avviare la Build Binaria
+### 3. Start the Binary Build
 
-Questo comando prende tutti i file nella directory corrente (inclusi il `Dockerfile` e la cartella `target`), li invia a OpenShift e avvia il processo di build dell'immagine.
+This command takes all files in the current directory (including the `Dockerfile` and the `target` folder), sends them to OpenShift, and starts the image build process.
 
-Esegui il comando dalla root del tuo progetto:
+Run the command from your project's root directory:
 
 ```sh
 oc start-build custom-mirrormaker2-build --from-dir=. --follow
 ```
 
-Il flag `--follow` ti permette di seguire i log della build in tempo reale.
+The `--follow` flag allows you to see the build logs in real-time.
 
-### 4. Deployare MirrorMaker 2
+### 4. Deploy MirrorMaker 2
 
-Una volta che la build è completata con successo, l'immagine sarà disponibile nell'`ImageStream` interno di OpenShift. Ora puoi deployare `KafkaMirrorMaker2`.
+Once the build has completed successfully, the image will be available in OpenShift's internal `ImageStream`. You can now deploy `KafkaMirrorMaker2`.
 
 ```sh
 oc apply -f mm2-custom-resource.yaml
 ```
 
-### 5. Verificare
+### 5. Verify
 
-Controlla i log del pod di MM2 per vedere il messaggio di conferma del caricamento del tuo SMT.
+Check the logs of the MM2 pod to see the confirmation message that your SMT was loaded.
 
 ```sh
-# Trova il nome del pod di MM2
+# Find the name of the MM2 pod
 MM2_POD=$(oc get pods -l strimzi.io/cluster=my-custom-mm2 -o jsonpath='{.items[0].metadata.name}')
 
-# Controlla i log
+# Check the logs
 oc logs $MM2_POD | grep "Custom Logging SMT has been successfully loaded"
