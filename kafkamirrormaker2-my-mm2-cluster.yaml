@@ -1,0 +1,31 @@
+﻿apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaMirrorMaker2
+metadata:
+  name: my-mm2-cluster
+spec:
+  clusters:
+    - alias: cluster-a
+      bootstrapServers: 'cluster-a-kafka-bootstrap:9092'
+    - alias: cluster-b
+      bootstrapServers: 'cluster-b-kafka-bootstrap:9092'
+      config:
+        config.storage.replication.factor: -1
+        offset.storage.replication.factor: -1
+        status.storage.replication.factor: -1
+  connectCluster: cluster-b
+  image: 'image-registry.openshift-image-registry.svc:5000/mm2customsmt/custom-mirrormaker2'
+  mirrors:
+    - checkpointConnector:
+        config:
+          checkpoints.topic.replication.factor: -1
+      groupsPattern: .*
+      sourceCluster: cluster-a
+      sourceConnector:
+        config:
+          offset-syncs.topic.replication.factor: -1
+          replication.factor: -1
+          sync.topic.acls.enabled: 'false'
+      targetCluster: cluster-b
+      topicsPattern: .*
+  replicas: 1
+  version: 3.9.0
