@@ -1,0 +1,25 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: custom-mirrormaker2-build
+spec:
+  # Trigger: puoi configurare dei trigger per avviare la build automaticamente.
+  triggers: []
+  
+  source:
+    # Usa il tipo "Binary" per accettare file inviati dalla CLI.
+    # In questo modo, il codice sorgente non viene prelevato da Git.
+    type: Binary
+      
+  strategy:
+    # Usa la strategia "Docker" perché abbiamo un Dockerfile.
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: Dockerfile
+      
+  output:
+    # Definisce dove salvare l'immagine costruita.
+    # Verrà creato un ImageStream chiamato 'custom-mirrormaker2' con il tag 'latest'.
+    to:
+      kind: ImageStreamTag
+      name: "custom-mirrormaker2:latest"

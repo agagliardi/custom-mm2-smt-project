@@ -1,20 +1,17 @@
-# Use a Strimzi Kafka image that matches your Strimzi Cluster Operator version.
-# Check the Strimzi documentation for the correct base image for your version.
-ARG STRIMZI_VERSION="0.41.0"
-ARG KAFKA_VERSION="3.7.0"
-FROM quay.io/strimzi/kafka:${STRIMZI_VERSION}-kafka-${KAFKA_VERSION}
+# Usa l'immagine base di Red Hat AMQ Streams per Kafka 3.9.0
+FROM registry.redhat.io/amq-streams/kafka-39-rhel9@sha256:818446e9a1b90acdb273f8bfcd1bc01ba9920a06bbf67b94504f4bcf8302f445
 
-# Switch to the root user to create directories and set permissions
+# Passa all'utente root per creare directory e impostare i permessi
 USER root:root
 
-# Create a dedicated directory for our custom plugins.
-# This helps keep custom JARs organized and separate from default plugins.
+# Crea una directory dedicata per i nostri plugin custom.
+# Questo aiuta a mantenere i JAR custom organizzati e separati dai plugin di default.
 RUN mkdir -p /opt/kafka/plugins/custom-smt-plugins
 
-# Copy the compiled JAR file from your local build context into the image.
-# Assumes the Docker build is run from the root of your Maven project.
+# Copia il file JAR compilato dal contesto di build locale nell'immagine.
+# Si presume che la build di Docker venga eseguita dalla root del progetto Maven.
 COPY target/custom-smt-1.0.0.jar /opt/kafka/plugins/custom-smt-plugins/
 
-# It's a good practice to revert to the default non-root user.
-# The Strimzi base images use user 1001.
+# È una buona pratica tornare all'utente non-root di default.
+# Le immagini base di AMQ Streams usano l'utente 1001.
 USER 1001

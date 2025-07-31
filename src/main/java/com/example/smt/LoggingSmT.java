@@ -16,6 +16,14 @@ public class LoggingSmT<R extends ConnectRecord<R>> implements Transformation<R>
 
     private static final Logger log = LoggerFactory.getLogger(LoggingSmT.class);
     public static final String SMT_LOADED_MESSAGE = "Custom Logging SMT has been successfully loaded and configured.";
+    public static final String SMT_CP_MESSAGE = "Custom Logging SMT has been successfully loaded from the classpath";
+
+    static{
+        log.info("*************************************************");
+        log.info(SMT_LOADED_MESSAGE);
+        log.info("CL:"+LoggingSmT.class.getClassLoader());
+        log.info("*************************************************");
+    }
 
     /**
      * This method is called once when the SMT is initialized.
